@@ -1,0 +1,19 @@
+Terminal Command (for Windows, Linux, or Raspberry Pi)
+
+pip install torch>=2.0 torchvision>=0.15 numpy opencv-python pandas matplotlib PyYAML tqdm seaborn ultralytics
+
+
+Optional — if torch gives an error (especially on Raspberry Pi or older GPU setups):
+
+pip install torch==1.13.1 torchvision==0.14.1 numpy opencv-python pandas matplotlib PyYAML tqdm seaborn ultralytics
+
+
+After installation, to verify everything:
+
+python -c "import torch, cv2, ultralytics; print('✅ All libraries installed successfully')"
+
+
+Then run your model:
+
+python detect.py --weights best.pt --source 0 --conf 0.5 --view-img
+

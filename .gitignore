@@ -1,0 +1,17 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# YOLO training/output
+yolov5/runs/
+runs/
+
+# Generated images/output
+saved_images/
+
+# Personal face data
+known_faces/
+
+# macOS
+.DS_Store

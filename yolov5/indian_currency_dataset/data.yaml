@@ -1,0 +1,7 @@
+train: C:\Users\Kabir Khan\yolov5\indian_currency_dataset\train\images
+val: C:\Users\Kabir Khan\yolov5\indian_currency_dataset\valid\images
+test: C:\Users\Kabir Khan\yolov5\indian_currency_dataset\test\images
+
+
+nc: 7
+names: ['10', '100', '20', '200', '2000', '50', '500']

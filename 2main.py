@@ -1,0 +1,180 @@
+import RPi.GPIO as GPIO
+import time, threading, os, subprocess, datetime
+from picamera2 import Picamera2
+
+# ---------------- GPIO SETUP ----------------
+GPIO.setmode(GPIO.BCM)
+
+KEY1, KEY2, KEY3, KEY4 = 5, 6, 13, 19
+TIME_CAPTURE_BUTTON = 26
+
+for pin in [KEY1, KEY2, KEY3, KEY4, TIME_CAPTURE_BUTTON]:
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+TRIG, ECHO, BUZZ = 23, 24, 17
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+GPIO.setup(BUZZ, GPIO.OUT)
+GPIO.output(TRIG, False)
+
+tts_trigger = "/home/project/projecteye/tts_trigger.txt"
+
+face_process = object_process = tts_process = None
+face_running = object_running = tts_running = False
+
+# ---------------- SPEAK ----------------
+def speak(text):
+    os.system(f"espeak '{text}' --stdout | aplay > /dev/null 2>&1")
+    time.sleep(0.3)
+
+# ---------------- ULTRASONIC ----------------
+def ultrasonic_loop():
+    while True:
+        GPIO.output(TRIG, True)
+        time.sleep(0.00001)
+        GPIO.output(TRIG, False)
+        start = time.time()
+        while GPIO.input(ECHO) == 0:
+            start = time.time()
+        while GPIO.input(ECHO) == 1:
+            end = time.time()
+        distance = (end - start) * 17150
+        if 2 < distance < 80:
+            GPIO.output(BUZZ, True)
+        else:
+            GPIO.output(BUZZ, False)
+        time.sleep(0.15)
+
+threading.Thread(target=ultrasonic_loop, daemon=True).start()
+
+# ---------------- MODULE HANDLERS ----------------
+def start_face():
+    global face_running, face_process
+    stop_all()
+    speak("Face recognition on")
+    face_process = subprocess.Popen(["python3", "/home/project/projecteye/face_module.py"])
+    face_running = True
+
+def stop_face():
+    global face_running, face_process
+    if face_process:
+        face_process.terminate()
+        face_process.wait()
+    face_running = False
+    speak("Face recognition off")
+
+def start_object():
+    global object_running, object_process
+    stop_all()
+    speak("Object detection on")
+    object_process = subprocess.Popen(["python3", "/home/project/projecteye/object_detection.py"])
+    object_running = True
+
+def stop_object():
+    global object_running, object_process
+    if object_process:
+        object_process.terminate()
+        object_process.wait()
+    object_running = False
+    speak("Object detection off")
+
+def start_tts():
+    global tts_running, tts_process
+    stop_all()
+    open(tts_trigger, "w").close()
+    speak("Text reading mode on")
+    tts_process = subprocess.Popen(["python3", "/home/project/projecteye/text_to_speech.py"])
+    tts_running = True
+
+def stop_tts():
+    global tts_running, tts_process
+    if tts_process:
+        with open(tts_trigger, "w") as f:
+            f.write("stop")
+        time.sleep(0.5)
+        tts_process.terminate()
+        tts_process.wait()
+    tts_running = False
+    speak("Text reading mode off")
+
+def stop_all():
+    if face_running: stop_face()
+    if object_running: stop_object()
+    if tts_running: stop_tts()
+    time.sleep(0.3)
+
+# ---------------- UTILITIES ----------------
+def detect_press(pin):
+    start = time.time()
+    while GPIO.input(pin) == 0:
+        time.sleep(0.01)
+    return time.time() - start
+
+def speak_time_date():
+    now = datetime.datetime.now()
+    speak(f"Time is {now.strftime('%I:%M %p')}")
+    speak(f"Today is {now.strftime('%A, %B %d')}")
+
+def capture_image():
+    folder = "/home/project/projecteye/saved_images"
+    os.makedirs(folder, exist_ok=True)
+    filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".jpg"
+    path = os.path.join(folder, filename)
+    try:
+        picam2 = Picamera2()
+        picam2.configure(picam2.create_still_configuration())
+        picam2.start()
+        time.sleep(1)
+        picam2.capture_file(path)
+        picam2.stop()
+        picam2.close()
+        speak("Image captured")
+        print(f"📸 Saved: {path}")
+    except Exception as e:
+        print("⚠️ Camera error:", e)
+        speak("Capture failed")
+
+# ---------------- STARTUP ----------------
+speak("Device turned on")
+print("✅ Smart Eye System Ready")
+
+# ---------------- MAIN LOOP ----------------
+try:
+    while True:
+        # Key 1 - Face
+        if GPIO.input(KEY1) == 0:
+            time.sleep(0.25)
+            if not face_running: start_face()
+            else: stop_face()
+
+        # Key 2 - Object
+        if GPIO.input(KEY2) == 0:
+            time.sleep(0.25)
+            if not object_running: start_object()
+            else: stop_object()
+
+        # Key 3 - TTS
+        if GPIO.input(KEY3) == 0:
+            press = detect_press(KEY3)
+            if tts_running and press > 2:
+                with open(tts_trigger, "w") as f: f.write("capture")
+                speak("Scanning")
+            elif press < 1:
+                if not tts_running: start_tts()
+                else: stop_tts()
+
+        # Extra Button - Time / Capture
+        if GPIO.input(TIME_CAPTURE_BUTTON) == 0:
+            press = detect_press(TIME_CAPTURE_BUTTON)
+            if press >= 2:
+                capture_image()
+            else:
+                speak_time_date()
+
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    GPIO.cleanup()
+    stop_all()
+    speak("Device shutting down safely")
+    print("👋 System stopped")

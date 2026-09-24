@@ -1,0 +1,22 @@
+[0;1;32m●[0m bluetooth.service - Bluetooth service
+     Loaded: loaded (]8;;file://raspberrypi/usr/lib/systemd/system/bluetooth.service\/usr/lib/systemd/system/bluetooth.service]8;;\; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Thu 2025-11-13 21:33:59 IST; 2min 45s ago
+ Invocation: 55671084c6314693b2df48220612e3a0
+       Docs: ]8;;man:bluetoothd(8)\man:bluetoothd(8)]8;;\
+   Main PID: 4992 (bluetoothd)
+     Status: "[0;1;36mRunning[0m"
+      Tasks: 1[0;38;5;245m (limit: 3918)[0m
+        CPU: 139ms
+     CGroup: /system.slice/bluetooth.service
+             └─[0;38;5;245m4992 /usr/libexec/bluetooth/bluetoothd --experimental[0m
+
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSource/faststream
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSource/faststream_duplex
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSink/opus_05
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSource/opus_05
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSink/opus_05_duplex
+Nov 13 21:33:59 raspberrypi bluetoothd[4992]: Endpoint registered: sender=:1.27 path=/MediaEndpoint/A2DPSource/opus_05_duplex
+Nov 13 21:34:06 raspberrypi bluetoothd[4992]: [0;1;31m[0;1;39m[0;1;31mprofiles/audio/avdtp.c:avdtp_connect_cb() connect to 41:42:8D:BD:60:12: Host is down (112)[0m
+Nov 13 21:34:14 raspberrypi bluetoothd[4992]: Path / reserved for Adv Monitor app :1.68
+Nov 13 21:34:32 raspberrypi bluetoothd[4992]: Adv Monitor app :1.68 disconnected from D-Bus
+Nov 13 21:35:28 raspberrypi bluetoothd[4992]: [0;1;31m[0;1;39m[0;1;31msrc/gatt-database.c:client_ready_cb() No object received[0m
